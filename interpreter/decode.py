@@ -64,20 +64,19 @@ def interpret_bf(bfk: str, input: bytes = b"") -> str:
     return output.decode("latin1")
 
 def decode(n: int) -> str:
-    b = bin(n)[3:]  # remove '0b' and leading 1
+    o = oct(n)[3:]  # remove '0o' and leading 1
     bfk = ""
 
-    for i in range(0, len(b), 3):
-        chr = b[i:i+3]
-        match chr:
-            case "000": bfk += ">"
-            case "001": bfk += "<"
-            case "010": bfk += "+"
-            case "011": bfk += "-"
-            case "100": bfk += "."
-            case "101": bfk += ","
-            case "110": bfk += "["
-            case "111": bfk += "]"
+    for c in o:
+        match c:
+            case "0": bfk += ">"
+            case "1": bfk += "<"
+            case "2": bfk += "+"
+            case "3": bfk += "-"
+            case "4": bfk += "."
+            case "5": bfk += ","
+            case "6": bfk += "["
+            case "7": bfk += "]"
 
     return bfk
 

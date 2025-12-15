@@ -10,6 +10,7 @@ HELLO_WORLD = "+[-->-[>>+>-----<<]<--<---]>-.>>>+.>>..+++[.>]<<<<.+++.------.<<-
 
 MOVE = ",[->+<]>."
 
+# ------------------------ Run Tests ------------------------
 
 if __name__ == "__main__":
     TEST = HELLO_WORLD
@@ -22,7 +23,6 @@ if __name__ == "__main__":
     if "," in TEST:
         with open("input.txt", "rb") as f:
             input = f.read()
-    # print("input = " + str(input))
 
     out = run(TEST_INT, input)
     print(repr(out))

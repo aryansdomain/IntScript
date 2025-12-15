@@ -5,13 +5,13 @@ def encode(s: str) -> int:
 
     for c in s:
         match c:
-            case ">": output += "000"
-            case "<": output += "001"
-            case "+": output += "010"
-            case "-": output += "011"
-            case ".": output += "100"
-            case ",": output += "101"
-            case "[": output += "110"
-            case "]": output += "111"
+            case ">": output += "0"
+            case "<": output += "1"
+            case "+": output += "2"
+            case "-": output += "3"
+            case ".": output += "4"
+            case ",": output += "5"
+            case "[": output += "6"
+            case "]": output += "7"
 
-    return int("1" + output, 2)
+    return int("1" + output, 8)
