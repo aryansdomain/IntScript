@@ -1,85 +1,65 @@
-def interpret_bf(bfk: str, input: bytes = b"") -> str:
-    tape = [0] * 30000
-    ptr = 0
-    input_ptr = 0
-    output = bytearray()
+from __future__ import annotations
+from typing import List, Tuple
 
-    pc = 0
-    code_len = len(bfk)
-    while pc < code_len:
-        cmd = bfk[pc]
+from .interpreter import ADD, MOVE, OUT, SET, LOOP, IN, COPY, MUL, Instructions
 
-        if cmd == ">":
-            ptr += 1
-            if ptr >= len(tape):
-                tape.append(0)
+def to_int(binary: str) -> int:
+    u = int(binary, 2)
+    if (u % 2) == 0: return u // 2
+    else:            return -((u + 1) // 2)
 
-        elif cmd == "<":
-            ptr -= 1
-            if ptr < 0: # change starting point
-                tape.insert(0, 0)
-                ptr = 0
 
-        elif cmd == "+":
-            tape[ptr] = (tape[ptr] + 1) & 0xFF # & to avoid overflow
+def decode_block(bits: str, block_len: int = 65536, start: int = 0) -> Tuple[List[Instructions], int]:
+    block: List[Instructions] = []
 
-        elif cmd == "-":
-            tape[ptr] = (tape[ptr] - 1) & 0xFF # & to avoid underflow
+    i = start
+    num_cmds = 0
+    while i < len(bits) and num_cmds < block_len:
+        cmd = bits[i:i+3]
+        i += 3
+        num_cmds += 1
 
-        elif cmd == ".":
-            output.append(tape[ptr])
+        match cmd:
+            case "000":
+                k = to_int(bits[i:i+8])
+                i += 8 # skip over argument
+                block.append(ADD(k))
 
-        elif cmd == ",":
-            if input_ptr < len(input):
-                tape[ptr] = input[input_ptr]
-                input_ptr += 1
-            else:
-                tape[ptr] = 0
+            case "001":
+                k = to_int(bits[i:i+8])
+                i += 8 # skip over argument
+                block.append(MOVE(k))
 
-        elif cmd == "[":
-            if tape[ptr] == 0:
-                depth = 1
-                pc += 1
-                # find matching ]
-                while pc < code_len and depth > 0:
-                    if   bfk[pc] == "[": depth += 1
-                    elif bfk[pc] == "]": depth -= 1
-                    pc += 1
-                continue
+            case "010":
+                k = to_int(bits[i:i+8])
+                i += 8 # skip over argument
+                block.append(SET(k))
 
-        elif cmd == "]":
-            if tape[ptr] != 0:
-                depth = 1
-                pc -= 1
-                # go back to matching [
-                while pc >= 0 and depth > 0:
-                    if   bfk[pc] == "]": depth += 1
-                    elif bfk[pc] == "[": depth -= 1
-                    pc -= 1
-                pc += 1
-                continue
+            case "011": 
+                body_len = int(bits[i:i+8], 2)
+                i += 8
 
-        pc += 1
+                loop_block, i = decode_block(bits, body_len, i)
+                block.append(LOOP(loop_block))
 
-    return output.decode("latin1")
+            case "100":
+                block.append(OUT())
+            
+            case "101":
+                block.append(IN())
 
-def decode(n: int) -> str:
-    o = oct(n)[3:]  # remove '0o' and leading 1
-    bfk = ""
+            case "110":
+                k = to_int(bits[i:i+8])
+                i += 8 # skip over argument
+                block.append(COPY(k))
 
-    for c in o:
-        match c:
-            case "0": bfk += ">"
-            case "1": bfk += "<"
-            case "2": bfk += "+"
-            case "3": bfk += "-"
-            case "4": bfk += "."
-            case "5": bfk += ","
-            case "6": bfk += "["
-            case "7": bfk += "]"
+            case "111":
+                k = to_int(bits[i:i+8])
+                i += 8 # skip over argument
+                block.append(MUL(k))
 
-    return bfk
+    return block, i
 
-def run(n: int, input: bytes = b"") -> str:
-    bfk = decode(n)
-    return interpret_bf(bfk, input)
+def decode(N: int) -> List[Instructions]:
+    binary = bin(N)[3:]
+    return decode_block(binary)[0]
