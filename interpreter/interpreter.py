@@ -5,16 +5,34 @@ from typing import List, Union
 # ------------------------ Instructions ------------------------
 
 @dataclass(frozen=True)
-class ADD:
+class MOVE:
     k: int
 @dataclass(frozen=True)
-class MOVE:
+class CADD:
     k: int
 @dataclass(frozen=True)
 class SET:
     k: int
 @dataclass(frozen=True)
+class ADD:
+    k: int
+@dataclass(frozen=True)
+class SUB:
+    k: int
+@dataclass(frozen=True)
+class COPY:
+    k: int
+@dataclass(frozen=True)
+class SWAP:
+    k: int
+@dataclass(frozen=True)
 class LOOP:
+    body: List["Instructions"]
+@dataclass(frozen=True)
+class IFZ:
+    body: List["Instructions"]
+@dataclass(frozen=True)
+class IFNZ:
     body: List["Instructions"]
 @dataclass(frozen=True)
 class OUT:
@@ -23,13 +41,22 @@ class OUT:
 class IN:
     pass
 @dataclass(frozen=True)
-class COPY:
-    k: int
-@dataclass(frozen=True)
 class MUL:
     k: int
+@dataclass(frozen=True)
+class CMUL:
+    k: int
+@dataclass(frozen=True)
+class DIV:
+    k: int
+@dataclass(frozen=True)
+class CDIV:
+    k: int
 
-Instructions = Union[ADD, MOVE, SET, LOOP, OUT, IN, COPY, MUL]
+Instructions = Union[
+    MOVE, CADD, SET, ADD, SUB, COPY, SWAP, LOOP,
+    IFZ, IFNZ, OUT, IN, MUL, CMUL, DIV, CDIV
+]
 
 # ------------------------ Interpret ------------------------
 
@@ -48,27 +75,46 @@ def interpret(program: List[Instructions], input: bytes = b"") -> bytes:
         nonlocal ptr, in_pos
         for ins in block:
 
-            if isinstance(ins, ADD):
-                set_cell(ptr, get_cell(ptr) + ins.k)
-
-            elif isinstance(ins, MOVE):
+            if isinstance(ins, MOVE):
                 ptr += ins.k
+
+            elif isinstance(ins, CADD):
+                set_cell(ptr, get_cell(ptr) + ins.k)
 
             elif isinstance(ins, SET):
                 set_cell(ptr, ins.k)
+
+            elif isinstance(ins, ADD):
+                set_cell(ptr, get_cell(ptr) + get_cell(ptr + ins.k))
+
+            elif isinstance(ins, SUB):
+                set_cell(ptr, get_cell(ptr) - get_cell(ptr + ins.k))
+
+            elif isinstance(ins, COPY):
+                set_cell(ptr + ins.k, get_cell(ptr))
+
+            elif isinstance(ins, SWAP):
+                a = get_cell(ptr)
+                b = get_cell(ptr + ins.k)
+                set_cell(ptr, b)
+                set_cell(ptr + ins.k, a)
             
             elif isinstance(ins, LOOP):
                 while get_cell(ptr) != 0:
+                    exec_block(ins.body)
+
+            elif isinstance(ins, IFZ):
+                if get_cell(ptr) == 0:
+                    exec_block(ins.body)
+        
+            elif isinstance(ins, IFNZ):
+                if get_cell(ptr) != 0:
                     exec_block(ins.body)
 
             elif isinstance(ins, OUT):
                 out.append(get_cell(ptr) & 0xFF)
 
             elif isinstance(ins, IN):
-                # skip \n and \r
-                while in_pos < len(input) and input[in_pos] in (10, 13):
-                    in_pos += 1
-
                 # read one byte, set current cell
                 if in_pos < len(input):
                     set_cell(ptr, input[in_pos])
@@ -76,11 +122,22 @@ def interpret(program: List[Instructions], input: bytes = b"") -> bytes:
                 else:
                     set_cell(ptr, 0)
 
-            elif isinstance(ins, COPY):
-                set_cell(ptr + ins.k, get_cell(ptr))
-
             elif isinstance(ins, MUL):
                 set_cell(ptr, get_cell(ptr) * get_cell(ptr + ins.k))
+
+            elif isinstance(ins, CMUL):
+                set_cell(ptr, get_cell(ptr) * ins.k)
+
+            elif isinstance(ins, DIV):
+                divisor = get_cell(ptr + ins.k)
+                if divisor == 0:
+                    raise ZeroDivisionError("DIV with divisor 0")
+                set_cell(ptr, get_cell(ptr) // divisor)
+
+            elif isinstance(ins, CDIV):
+                if ins.k == 0:
+                    raise ZeroDivisionError("CDIV with divisor 0")
+                set_cell(ptr, get_cell(ptr) // ins.k)
 
             else:
                 raise TypeError(f"Unknown instruction: {ins}")
