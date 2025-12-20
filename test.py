@@ -31,74 +31,74 @@ HELLO_WORLD: List[Instructions] = [
 
 # n!
 FACTORIAL: List[Instructions] = [
-    IN(),                    # cell0 = i = n
-    MOVE(1), SET(1),         # cell1 = res = 1
-    MOVE(-1),                # -> c0
+    IN(),                       # cell0 = i = n
+    MOVE(1), SET(1),            # cell1 = res = 1
+    MOVE(-1),                   # -> c0
     LOOP([
-        MOVE(1), MUL(-1),    # -> c1 *= c0
-        MOVE(-1), CADD(-1),  # -> c0--
+        MOVE(1), MUL(-1),       # -> c1 *= c0
+        MOVE(-1), CADD(-1),     # -> c0--
     ]),
-    MOVE(1), OUT()           # <- c1
+    MOVE(1), OUT()              # <- c1
 ]
 
 # sqrt(n)
 # 1 + 3 + 5 + ... + (2n-1) = n^2
 SQRT: List[Instructions] = [
-    IN(),                           # c0 = n
-    MOVE(1), CADD(1),               # -> c1 = 1
-    MOVE(-1),                       # -> c0
+    IN(),                       # c0 = n
+    MOVE(1), CADD(1),           # -> c1 = 1
+    MOVE(-1),                   # -> c0
 
     # subtract odd numbers from c0 until = 0
     LOOP([
-        MOVE(1),                    # -> c1
-        COPY(2), MOVE(2),           # -> c3 = c1
+        MOVE(1),                # -> c1
+        COPY(2), MOVE(2),       # -> c3 = c1
 
         # c0 -= c3
         LOOP([
-            CADD(-1),               # c3--
-            MOVE(-3), CADD(-1),     # c0--
-            MOVE(3),                # -> c3
+            CADD(-1),           # c3--
+            MOVE(-3), CADD(-1), # c0--
+            MOVE(3),            # -> c3
         ]),
 
-        MOVE(-2), CADD(2),          # -> c1 += 2 (next odd number)
-        MOVE(1), CADD(1),           # -> c2++ (count)
-        MOVE(-2),                   # -> c0
+        MOVE(-2), CADD(2),      # -> c1 += 2 (next odd number)
+        MOVE(1), CADD(1),       # -> c2++ (count)
+        MOVE(-2),               # -> c0
     ]),
 
-    MOVE(2), OUT()                  # c2
+    MOVE(2), OUT()              # c2
 ]
 
-# nth figonacci number
+# find the nth fibonacci number
 FIBONACCI: List[Instructions] = [
-    IN(),                      # c0 = n
-    MOVE(1), SET(0),           # c1 = a = 0
-    MOVE(1), SET(1),           # c2 = b = 1
-    MOVE(-2),                  # -> c0
+    IN(),                       # c0 = n
+    MOVE(1), SET(0),            # c1 = a = 0
+    MOVE(1), SET(1),            # c2 = b = 1
+    MOVE(-2),                   # -> c0
 
     LOOP([
-        CADD(-1),              # c0--
-        MOVE(1), SWAP(1),      # c1 <-> c2
-        MOVE(1), ADD(-1),      # c2 += c1
-        MOVE(-2),              # -> c0
+        CADD(-1),               # c0--
+        MOVE(1), SWAP(1),       # c1 <-> c2
+        MOVE(1), ADD(-1),       # c2 += c1
+        MOVE(-2),               # -> c0
     ]),
-    MOVE(1), OUT()             # <- c1
+    MOVE(1), OUT()              # <- c1
 ]
 
 # gcd of a and b (euclid)
 GCD: List[Instructions] = [
-    IN(),                   # c0 = a
-    MOVE(1), IN(),          # c1 = b
+    IN(),                       # c0 = a
+    MOVE(1), IN(),              # c1 = b
 
     LOOP([
-        MOVE(-1),           # -> c0
-        COPY(2), MOVE(2),   # -> c2 = c0
-        DIV(-1), MUL(-1),   # c2 = (a/b)*b = a // b
-        MOVE(-2), SUB(2),   # -> c0 -= c2 (= a mod b)
-        SWAP(1),            # c0 <-> c1 (c0 = b, c1 = a mod b)
-        MOVE(1),            # -> c1
+        MOVE(-1),               # -> c0
+        COPY(2), MOVE(2),       # -> c2 = c0
+        DIV(-1), MUL(-1),       # c2 = (a/b)*b = a // b
+        MOVE(-2), SUB(2),       # -> c0 -= c2 (= a mod b)
+        SWAP(1),                # c0 <-> c1 (c0 = b, c1 = a mod b)
+        MOVE(1),                # -> c1
     ]),
 
-    MOVE(-1), OUT()         # c0 = gcd(a,b)
+    MOVE(-1), OUT()             # c0 = gcd(a,b)
 ]
 
 # a^b
@@ -165,17 +165,26 @@ COLLATZ: List[Instructions] = [
         MOVE(-1)                # -> c0
     ]),
 
-    MOVE(1), OUT(),             # output steps
+    MOVE(1), OUT()              # output steps
 ]
 
 TRUTH_MACHINE: List[Instructions] = [
     IN(),
-    IFZ([ OUT() ]),
-    LOOP([ OUT() ])
+    IFZ([ OUT() ]),             # if 0, output 0
+    LOOP([ OUT() ])             # if 1, infinitely output 1
 ]
+
+def compute_compactness() -> int:
+    total = 0
+    programs = [HELLO_WORLD, FACTORIAL, SQRT, FIBONACCI, GCD, POWER, TRIANGULAR, COLLATZ, TRUTH_MACHINE]
+    for program in programs: total += encode(program)
+
+    print(str(total // len(programs))) # average
 
 
 if __name__ == "__main__":
+    # compute_compactness()
+
     TEST = HELLO_WORLD # change
 
     # encode
