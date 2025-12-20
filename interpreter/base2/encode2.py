@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import List
 
-from .interpreter import (
+from interpreter.interpreter import (
     MOVE, CADD, SET, ADD, SUB, COPY, SWAP, LOOP,
     IFZ, IFNZ, OUT, IN, MUL, CMUL, DIV, CDIV,
     Instructions
@@ -14,7 +14,7 @@ def int_to_binary(n: int) -> str:
     # use ZigZag to convert signed int to unsigned binary
     if n >= 0: u =  2 * n
     else:      u = -2 * n - 1
-    return bin(u)[2:]
+    return format(u, "08b")
 
 
 def encode_block(block: List[Instructions]) -> str:
@@ -22,11 +22,14 @@ def encode_block(block: List[Instructions]) -> str:
     for cmd in block:
 
         if isinstance(cmd, LOOP) or isinstance(cmd, IFZ) or isinstance(cmd, IFNZ):
-            k = encode_block(cmd.body) + "2"
+            body_len = len(cmd.body)
+            if body_len > 255:
+                raise ValueError(f"{cmd.__class__.__name__} body too large ({body_len} instructions, max 255")
 
-        elif not isinstance(cmd, OUT) and not isinstance(cmd, IN): # no arguments
-            k = int_to_binary(cmd.k) + "2"
+            k = format(body_len, "08b") + encode_block(cmd.body)
 
+        elif not isinstance(cmd, OUT) and not isinstance(cmd, IN): # has arguments
+            k = int_to_binary(cmd.k)
 
         if   isinstance(cmd, MOVE): bits += "0000" + k
         elif isinstance(cmd, CADD): bits += "0001" + k
@@ -49,6 +52,6 @@ def encode_block(block: List[Instructions]) -> str:
 
     return bits
 
-def encode(program: List[Instructions]) -> int:
+def encode2(program: List[Instructions]) -> int:
     # leading 1 to ensure all bits get counted
-    return int("1" + encode_block(program), 3)
+    return int("1" + encode_block(program), 2)

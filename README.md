@@ -1,8 +1,8 @@
 # IntScript
 
-IntScript is an esoteric programming language where the source code consists of only one integer.
+IntScript is an esoteric programming language where the source code consists of only one nonnegative integer.
 
-“Cheating” is not allowed; the integer must be written as a normal base-10 number in its simplest form, with no leading zeros or alternative representations (such as writing it in a higher base to reduce the number of characters). One can think of the integer as a real-world quantity, such as a count of objects. Writing the same value with leading zeros or in another base does not change that quantity, so those representations are considered equivalent and invalid.
+“Cheating” is not allowed; the integer must be written as a normal base-10 number in its simplest form, with no leading zeros or alternative representations (such as writing it in a higher base to reduce the number of characters). One can think of the integer as a real-world quantity, such as a count of objects. Writing the same value with leading zeros or in another base does not change that quantity, so those representations are considered equivalent and invalid. Additionally, a count of something cannot be negative, so negative integers are also rejected.
 
 ## How It Works
 
@@ -38,19 +38,20 @@ Notes:
 
 ### Encoding
 
-The encoding for a program outputs a single ternary (base-3) number, which is then converted to an integer. Each encoding starts with a blank ternary string.
+There are two ways that each program can be encoded, either to a binary string *(Method 1)* or a ternary (base-3) string *(Method 2)*, which is then converted to an integer. Each encoding starts with a blank string.
 
 **For each command:**
-* The corresponding **binary** code for the command (see the table above) is appended to the **ternary** string. *(the mismatch between the two bases may seem confusing, but it will be explained later.)*
+* The corresponding binary code for the command (see the table above) is appended to the string.
 
 * **For a single-number argument *(e.g. MOVE, ADD)*:**
     * [ZigZag encoding](https://gist.github.com/mfuerstenau/ba870a29e16536fdbaba) is applied to the signed integer to make it unsigned.
-    * It is appended after the binary code.
+    * The binary representation of the resulting number is taken. **In Method 1**, it is padded with 0s to ensure it is 8 digits long. 
 
 * **For an argument that has a block of code *(e.g. LOOP, IFZ)*:**
+    * **In Method 1**, the number of commands in the block is appended to the string, ensuring it is 8 digits long (in binary)
     * The binary encoding of the body of the command (the commands inside the LOOP or IFZ block) is appended.
 
-* Finally, a 2 is appended to the ternary string to signify the end of the command. **This 2 is what makes the otherwise-binary string ternary.**
+* **Only in Method 2,** a 2 is appended to the  string to signify the end of the command.
 
 #### Example
 
@@ -67,6 +68,22 @@ To show how encoding works, let us take example of a simple program, which compu
     ]),
     MOVE(1), OUT(),          # c1 = n!
 
+##### Method 1 (Base 2):
+
+The code for `IN()` is `1011`, so that is the start of our string.  
+Next, the code for `MOVE()`, which is `0000`, is added.  
+Then ZigZag is applied on the argument, `1`, which makes it `2`, which has a binary representation of `10`. It is padded with 0s to make it `00000010`.
+This results in the string `1011000000000010`. This continues for `SET(1)` and `MOVE(-1)`, until we reach the `LOOP` command.  
+
+The `LOOP` block has four commands, so the start of the command will be `0111` (the code for `LOOP`). Then, the length of the block, 4, is written in binary (`00000100`), and the encoding of the commands in the `LOOP` block follow.
+
+Continuing with this, the resulting binary string is `10110000000000100010000000100000000000010111000001000000000000101100000000010000000000010001000000010000000000101010`.  
+Then a leading 1 is added to ensure that, if the string were to start with a 0, all bits are still counted.
+
+Finally, the final string is converted to an integer, which in this case is `140194709557044538828960014283112490`.
+
+
+##### Method 2 (Base 3):
 
 The code for `IN()` is `1011`, so that is the start of our string.  
 Next, the code for `MOVE()`, which is `0000`, is added.  
@@ -78,4 +95,11 @@ The `LOOP` block has four commands, so the start of the command will be `0111` (
 Continuing with this, the resulting ternary string is `10110000102001010200001201110000102110012000012000112200001021010`.  
 Then a leading 1 is added to ensure that, if the string were to start with a 0, all bits are still counted.
 
-Finally, the final string is converted to an integer, which in this case is `14244071273938819875935978662755`. This number represents the program of computing a factorial.
+Finally, the final string is converted to an integer, which in this case is `14244071273938819875935978662755`.
+
+---
+As we can see, Method 2 is much better. So that should be our integer. But how can we tell the decoder that the number is encoded using Method 2 and not Method 1? We can employ a ZigZag-like Method.  
+If our integer was encoded with Method 1, we will just multiply the integer by 2, and if Method 2 was used, we multiply it by 2 and add 1.  
+This makes all Method 1 integers even, and all Method 2 integers odd. So the decoder can just check the parity to know which decoding algorithm to use!
+
+So, applying this to our Method 2 integer, the result is `28488142547877639751871957325511`. This number represents the operation of computing a factorial.

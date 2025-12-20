@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import List, Tuple
 
-from .interpreter import (
+from interpreter.interpreter import (
     MOVE, CADD, SET, ADD, SUB, COPY, SWAP, LOOP,
     IFZ, IFNZ, OUT, IN, MUL, CMUL, DIV, CDIV,
     Instructions
@@ -20,28 +20,26 @@ def decode_block(bits: str, start: int = 0) -> Tuple[List[Instructions], int]:
     i = start
 
     while i < len(bits):
-
         # for loop commands - reached end of block
         if bits[i] == '2':
             i += 1
             break
 
+        # read command
         cmd = bits[i:i+4]
         i += 4
 
-        body = None
+        # read argument
         if cmd not in {"1010", "1011"}: # exclude OUT and IN
-
             if cmd in {"0111", "1000", "1001"}: # loop commands
                 body, i = decode_block(bits, i)
             else:
                 # read until 2
                 start = i
                 while i < len(bits) and bits[i] != '2': i += 1
-                k = bits[start:i]
-                i += 1
 
-                k = binary_to_int(k) # argument
+                k = binary_to_int(bits[start:i]) # argument
+                i += 1
 
         match cmd:
             case "0000": block.append(MOVE(k))
@@ -63,9 +61,8 @@ def decode_block(bits: str, start: int = 0) -> Tuple[List[Instructions], int]:
 
     return block, i
 
-def decode(n: int) -> List[Instructions]:
-
-    # convert integer to ternary
+def decode3(n: int) -> List[Instructions]:
+    # convert to ternary
     digits = []
     while n > 0:
         digits.append(str(n % 3))

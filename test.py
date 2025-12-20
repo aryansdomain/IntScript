@@ -1,9 +1,11 @@
 from __future__ import annotations
 from typing import List
 
-from interpreter.encode      import encode
-from interpreter.decode      import decode
-from interpreter.interpreter import (
+from interpreter.base2.encode2 import encode2
+from interpreter.base2.decode2 import decode2
+from interpreter.base3.encode3 import encode3
+from interpreter.base3.decode3 import decode3
+from interpreter.interpreter  import (
     interpret,
     MOVE, CADD, SET, ADD, SUB, COPY, SWAP, LOOP,
     IFZ, IFNZ, OUT, IN, MUL, CMUL, DIV, CDIV,
@@ -133,39 +135,37 @@ TRIANGULAR: List[Instructions] = [
 COLLATZ: List[Instructions] = [
     IN(), CADD(-1),             # c0 = n-1
     MOVE(1), SET(0),            # c1 = steps = 0
-    MOVE(1), SET(2),            # c2 = 2
-    MOVE(-2),                   # -> c0
 
+    MOVE(-1),                   # -> c0
     # while (n-1) != 0
     LOOP([
         CADD(1),                # c0 = n
 
         # compute parity of n
-        COPY(3), COPY(4),       # c3 = c4 = c0
-        MOVE(3), CDIV(2),       # c3 = n/2
-        MOVE(1),                # -> c4
-        SUB(-1), SUB(-1),       # c4 -= 2*c3 (1 if odd, 0 if even)
+        COPY(2), COPY(3),       # c2 = c3 = c0
+        MOVE(2), CDIV(2),       # c2 = n/2
+        MOVE(1),                # -> c3
+        SUB(-1), SUB(-1),       # c3 -= 2 * c2 (1 if odd, 0 if even)
 
-        # if even (c4 == 0): n = c3
+        # if even (c3 == 0): n = n / 2 = c2
         IFZ([
-            MOVE(-1), COPY(-3), # c0 = c3
-            MOVE(1),            # -> c4
+            MOVE(-1), COPY(-2), # c0 = c2
+            MOVE(1),            # -> c3
         ]),
 
-        # if odd (c4 != 0): execute once (because r==1) => n = 3n + 1
-        LOOP([
-            SET(0),             # c4 = 0 (loop only runs once)
-            MOVE(-4),           # -> c0
+        # if odd (c3 != 0): n = 3n + 1
+        IFNZ([
+            MOVE(-3),           # -> c0
             CMUL(3), CADD(1),   # n = 3n + 1
-            MOVE(4),            # -> c4
+            MOVE(3)             # -> c3
         ]),
 
-        MOVE(-4), CADD(-1),     # -> c0 = n-1
-        MOVE(1), CADD(1),       # -> c1++
+        MOVE(-3), CADD(-1),     # -> c0 = n-1
+        MOVE(1), CADD(1),       # -> c1++ (steps)
         MOVE(-1)                # -> c0
     ]),
 
-    MOVE(1), OUT()              # output steps
+    MOVE(1), OUT()              # c1 = steps
 ]
 
 TRUTH_MACHINE: List[Instructions] = [
@@ -174,10 +174,20 @@ TRUTH_MACHINE: List[Instructions] = [
     LOOP([ OUT() ])             # if 1, infinitely output 1
 ]
 
+
+def optimal_coding(program: List[Instructions]) -> int:
+    TEST_INT_2 = encode2(program)
+    TEST_INT_3 = encode3(program)
+    if TEST_INT_2 < TEST_INT_3:
+        return 2 * TEST_INT_2
+    else:
+        return 2 * TEST_INT_3 + 1
+
 def compute_compactness() -> int:
     total = 0
     programs = [HELLO_WORLD, FACTORIAL, SQRT, FIBONACCI, GCD, POWER, TRIANGULAR, COLLATZ, TRUTH_MACHINE]
-    for program in programs: total += encode(program)
+    for program in programs:
+        total += optimal_coding(program)
 
     print(str(total // len(programs))) # average
 
@@ -187,12 +197,11 @@ if __name__ == "__main__":
 
     TEST = HELLO_WORLD # change
 
-    # encode
-    TEST_INT = encode(TEST)
+    # encode - pick optimal encoding
+    TEST_INT = optimal_coding(TEST)
     print(TEST_INT)
 
     # read input
-
     # option 1: read from input.txt
     input = b""
     if IN() in TEST:
@@ -202,7 +211,12 @@ if __name__ == "__main__":
     # option 2: set directly
     # input = b"\x05"
 
-    # decode and run
-    program = decode(TEST_INT)
+    # decode - infer how it was encoded)
+    if TEST_INT % 2 == 0:
+        program = decode2(TEST_INT // 2)
+    else:
+        program = decode3((TEST_INT - 1) // 2)
+
+    # run
     out = interpret(program, input)
     print(out)
