@@ -7,79 +7,47 @@ from .interpreter import (
     Instructions
 )
 
-def to_binary(n: int) -> str:
+def int_to_binary(n: int) -> str:
     if not -128 <= n <= 127:
         raise ValueError(f"{n} out of supported range (-128..127)")
 
     # use ZigZag to convert signed int to unsigned binary
     if n >= 0: u =  2 * n
     else:      u = -2 * n - 1
-    return format(u, "08b")
+    return bin(u)[2:]
 
 
 def encode_block(block: List[Instructions]) -> str:
     bits = ""
     for cmd in block:
-        if isinstance(cmd, MOVE):
-            bits += "0000" + to_binary(cmd.k)
 
-        elif isinstance(cmd, CADD):
-            bits += "0001" + to_binary(cmd.k)
-
-        elif isinstance(cmd, SET):
-            bits += "0010" + to_binary(cmd.k)
-
-        elif isinstance(cmd, ADD):
-            bits += "0011" + to_binary(cmd.k)
-
-        elif isinstance(cmd, SUB):
-            bits += "0100" + to_binary(cmd.k)
-
-        elif isinstance(cmd, COPY):
-            bits += "0101" + to_binary(cmd.k)
-
-        elif isinstance(cmd, SWAP):
-            bits += "0110" + to_binary(cmd.k)
-
-        elif isinstance(cmd, LOOP):
+        if isinstance(cmd, LOOP) or isinstance(cmd, IFZ) or isinstance(cmd, IFNZ):
             body_len = len(cmd.body)
             if body_len > 255:
-                raise ValueError(f"LOOP body too large ({body_len} instructions)")
+                raise ValueError(f"{cmd.__class__.__name__} body too large ({body_len} instructions)")
 
-            bits += "0111" + format(body_len, "08b") + encode_block(cmd.body)
+            k = bin(body_len)[2:] + "2" + encode_block(cmd.body) + "2"
 
-        elif isinstance(cmd, IFZ):
-            body_len = len(cmd.body)
-            if body_len > 255:
-                raise ValueError(f"IFZ body too large ({body_len} instructions)")
+        elif not isinstance(cmd, OUT) and not isinstance(cmd, IN):
+            k = int_to_binary(cmd.k) + "2"
 
-            bits += "1000" + format(body_len, "08b") + encode_block(cmd.body)
 
-        elif isinstance(cmd, IFNZ):
-            body_len = len(cmd.body)
-            if body_len > 255:
-                raise ValueError(f"IFNZ body too large ({body_len} instructions)")
-
-            bits += "1001" + format(body_len, "08b") + encode_block(cmd.body)
-
-        elif isinstance(cmd, OUT):
-            bits += "1010"
-        
-        elif isinstance(cmd, IN):
-            bits += "1011"
-
-        elif isinstance(cmd, MUL):
-            bits += "1100" + to_binary(cmd.k)
-
-        elif isinstance(cmd, CMUL):
-            bits += "1101" + to_binary(cmd.k)
-
-        elif isinstance(cmd, DIV):
-            bits += "1110" + to_binary(cmd.k)
-
-        elif isinstance(cmd, CDIV):
-            bits += "1111" + to_binary(cmd.k)
-
+        if   isinstance(cmd, MOVE): bits += "0000" + k
+        elif isinstance(cmd, CADD): bits += "0001" + k
+        elif isinstance(cmd, SET):  bits += "0010" + k
+        elif isinstance(cmd, ADD):  bits += "0011" + k
+        elif isinstance(cmd, SUB):  bits += "0100" + k
+        elif isinstance(cmd, COPY): bits += "0101" + k
+        elif isinstance(cmd, SWAP): bits += "0110" + k
+        elif isinstance(cmd, LOOP): bits += "0111" + k
+        elif isinstance(cmd, IFZ):  bits += "1000" + k
+        elif isinstance(cmd, IFNZ): bits += "1001" + k
+        elif isinstance(cmd, OUT):  bits += "1010"
+        elif isinstance(cmd, IN):   bits += "1011"
+        elif isinstance(cmd, MUL):  bits += "1100" + k
+        elif isinstance(cmd, CMUL): bits += "1101" + k
+        elif isinstance(cmd, DIV):  bits += "1110" + k
+        elif isinstance(cmd, CDIV): bits += "1111" + k
         else:
             raise TypeError(f"Unknown instruction: {cmd}")
 
@@ -87,4 +55,4 @@ def encode_block(block: List[Instructions]) -> str:
 
 def encode(program: List[Instructions]) -> int:
     # leading 1 to ensure all bits get counted
-    return int("1" + encode_block(program), 2)
+    return int("1" + encode_block(program), 3)

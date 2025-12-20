@@ -11,7 +11,7 @@ For the inspiration behind this implementation, see [brainfuck](https://esolangs
 Imagine an array (representing memory) with cells. There is also pointer that can move to different cells. The pointer can edit and read the values of each cell.
 
 The language has 16 commands that dictate how cells are changed.
-*(here, the cell that the pointer is pointing to is labelled as `ptr` and the array is labelled as `array`.)*
+*(here, the cell that the pointer is pointing to is labelled as `ptr` and the array is labelled as `array`)*
 
 | Binary code | #  | Command          | Description                          |
 |---:         |---:|---               |---                                   |
@@ -38,17 +38,21 @@ Notes:
 
 ### Encoding
 
-The encoding for a program outputs a single binary number, which is then converted to an integer. Each encoding starts with a blank binary string.
+The encoding for a program outputs a single ternary (base-3) number, which is then converted to an integer. Each encoding starts with a blank ternary string.
 
 **For each command:**
-* The corresponding binary code for the command (see the table above) is appended to the binary string.
+* The corresponding *binary* code for the command (see the table above) is appended to the *ternary* string. *(the mismatch between the two bases may seem confusing, but it will be explained later.)*
+
 * **For a single-number argument *(e.g. MOVE, ADD)*:**
     * [ZigZag encoding](https://gist.github.com/mfuerstenau/ba870a29e16536fdbaba) is applied to the signed integer to make it unsigned.
-    * It is appended after the code as a 1-byte unsigned number.
+    * It is appended after the binary code.
+
 * **For an argument that is a block of code *(e.g. LOOP, IFZ)*:**
-    * The number of commands (the length of the block) is appended as a 1-byte unsigned number.
-        * Note that ZigZag is not applied here, as the number of commands is always positive
+    * The number of commands (the length of the block) is appended as an unsigned number.  
+    Note that **ZigZag is not applied here**, as the number of commands is always positive.
     * The binary representing the block of code is appended.
+
+* Finally, a 2 is appended to the ternary string to signify the end of the command. This 2 is what makes the otherwise-binary string ternary.
 
 #### Example
 
@@ -68,11 +72,12 @@ To show how encoding works, let us take example of a simple program, which compu
 
 The code for `IN()` is `1011`, so that is the start of our string.  
 Next, the code for `MOVE()`, which is `0000`, is added.  
-Then ZigZag is applied on the argument, `1`, which makes it `2`, which has binary representation of `00000010`.  
-This results in the string `1011000000000010`. This continues for `SET(1)` and `MOVE(-1)`, until we reach the `LOOP` command.  
+Then ZigZag is applied on the argument, `1`, which makes it `2`, which has a binary representation of `10`. Then the `2` is added to mark the end of the command.   
+This results in the string `10110000102`. This continues for `SET(1)` and `MOVE(-1)`, until we reach the `LOOP` command.  
 
-The `LOOP` block has four commands, so the start of the command will be `0111` (the code for `LOOP`) followed by `00000100` (4). Then, the encoding of the commands in the `LOOP` block follow.
+The `LOOP` block has four commands, so the start of the command will be `0111` (the code for `LOOP`) followed by `100` (4) and `2`. Then, the encoding of the commands in the `LOOP` block follow.
 
-Continuing with this, the resulting binary string is `10110000000000100010000000100000000000010111000001000000000000101100000000010000000000010001000000010000000000101010`.  
-Then a leading 1 is added to ensure that, if the string were to start with a 0, all bits are still counted.  
-Finally, the final string is converted to an integer, which in this case is `140194709557044538828960014283112490`. This number represents the program of computing a factorial.
+Continuing with this, the resulting ternary string is `101100001020010102000012011110020000102110012000012000112200001021010`.  
+Then a leading 1 is added to ensure that, if the string were to start with a 0, all bits are still counted.
+
+Finally, the final string is converted to an integer, which in this case is `1153769773189057279566187875308922`. This number represents the program of computing a factorial.
