@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Any, List, Tuple
+from typing import List, Tuple
 
 from .interpreter import (
     MOVE, CADD, SET, ADD, SUB, COPY, SWAP, LOOP,
@@ -15,32 +15,33 @@ def binary_to_int(binary: str) -> int:
     else:            return -((u+1) // 2)
 
 
-def decode_block(bits: str, block_len: int = 65536, start: int = 0) -> Tuple[List[Instructions], int]:
+def decode_block(bits: str, start: int = 0) -> Tuple[List[Instructions], int]:
     block: List[Instructions] = []
     i = start
-    num_cmds = 0
 
-    while i < len(bits) and num_cmds < block_len:
+    while i < len(bits):
+
+        # for loop commands - reached end of block
+        if bits[i] == '2':
+            i += 1
+            break
+
         cmd = bits[i:i+4]
         i += 4
-        num_cmds += 1
 
         body = None
         if cmd not in {"1010", "1011"}: # exclude OUT and IN
 
-            # read until 2
-            start = i
-            while i < len(bits) and bits[i] != '2': i += 1
-            k = bits[start:i]
-            i += 1
+            if cmd in {"0111", "1000", "1001"}: # loop commands
+                body, i = decode_block(bits, i)
+            else:
+                # read until 2
+                start = i
+                while i < len(bits) and bits[i] != '2': i += 1
+                k = bits[start:i]
+                i += 1
 
-            if int(cmd, 2) < 7 or int(cmd, 2) > 9: # non-loop commands (signed)
                 k = binary_to_int(k) # argument
-            else:                                  # loop commands (unsigned)
-                k = int(k, 2) # block length
-                body, i = decode_block(bits, k, i)
-                if i < len(bits) and bits[i] == '2': # read 2 at end of loop
-                    i += 1
 
         match cmd:
             case "0000": block.append(MOVE(k))

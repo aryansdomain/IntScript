@@ -22,13 +22,9 @@ def encode_block(block: List[Instructions]) -> str:
     for cmd in block:
 
         if isinstance(cmd, LOOP) or isinstance(cmd, IFZ) or isinstance(cmd, IFNZ):
-            body_len = len(cmd.body)
-            if body_len > 255:
-                raise ValueError(f"{cmd.__class__.__name__} body too large ({body_len} instructions)")
+            k = encode_block(cmd.body) + "2"
 
-            k = bin(body_len)[2:] + "2" + encode_block(cmd.body) + "2"
-
-        elif not isinstance(cmd, OUT) and not isinstance(cmd, IN):
+        elif not isinstance(cmd, OUT) and not isinstance(cmd, IN): # no arguments
             k = int_to_binary(cmd.k) + "2"
 
 

@@ -41,18 +41,16 @@ Notes:
 The encoding for a program outputs a single ternary (base-3) number, which is then converted to an integer. Each encoding starts with a blank ternary string.
 
 **For each command:**
-* The corresponding *binary* code for the command (see the table above) is appended to the *ternary* string. *(the mismatch between the two bases may seem confusing, but it will be explained later.)*
+* The corresponding **binary** code for the command (see the table above) is appended to the **ternary** string. *(the mismatch between the two bases may seem confusing, but it will be explained later.)*
 
 * **For a single-number argument *(e.g. MOVE, ADD)*:**
     * [ZigZag encoding](https://gist.github.com/mfuerstenau/ba870a29e16536fdbaba) is applied to the signed integer to make it unsigned.
     * It is appended after the binary code.
 
-* **For an argument that is a block of code *(e.g. LOOP, IFZ)*:**
-    * The number of commands (the length of the block) is appended as an unsigned number.  
-    Note that **ZigZag is not applied here**, as the number of commands is always positive.
-    * The binary representing the block of code is appended.
+* **For an argument that has a block of code *(e.g. LOOP, IFZ)*:**
+    * The binary encoding of the body of the command (the commands inside the LOOP or IFZ block) is appended.
 
-* Finally, a 2 is appended to the ternary string to signify the end of the command. This 2 is what makes the otherwise-binary string ternary.
+* Finally, a 2 is appended to the ternary string to signify the end of the command. **This 2 is what makes the otherwise-binary string ternary.**
 
 #### Example
 
@@ -75,9 +73,9 @@ Next, the code for `MOVE()`, which is `0000`, is added.
 Then ZigZag is applied on the argument, `1`, which makes it `2`, which has a binary representation of `10`. Then the `2` is added to mark the end of the command.   
 This results in the string `10110000102`. This continues for `SET(1)` and `MOVE(-1)`, until we reach the `LOOP` command.  
 
-The `LOOP` block has four commands, so the start of the command will be `0111` (the code for `LOOP`) followed by `100` (4) and `2`. Then, the encoding of the commands in the `LOOP` block follow.
+The `LOOP` block has four commands, so the start of the command will be `0111` (the code for `LOOP`). Then, the encoding of the commands in the `LOOP` block follow, ending with another 2 to mark the end of the block.
 
-Continuing with this, the resulting ternary string is `101100001020010102000012011110020000102110012000012000112200001021010`.  
+Continuing with this, the resulting ternary string is `10110000102001010200001201110000102110012000012000112200001021010`.  
 Then a leading 1 is added to ensure that, if the string were to start with a 0, all bits are still counted.
 
-Finally, the final string is converted to an integer, which in this case is `1153769773189057279566187875308922`. This number represents the program of computing a factorial.
+Finally, the final string is converted to an integer, which in this case is `14244071273938819875935978662755`. This number represents the program of computing a factorial.
