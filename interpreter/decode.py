@@ -1,40 +1,48 @@
 from __future__ import annotations
-from typing import List, Tuple
+from typing import List
 
 from interpreter.interpreter import (
     MOVE, CADD, SET, ADD, SUB, COPY, SWAP, LOOP,
-    IFZ, IFNZ, OUT, IN, MUL, CMUL, DIV, CDIV,
+    IFZ, OUT, IN, MUL, CMUL, DIV, CDIV,
     Instructions
 )
 
-def binary_to_int(binary: str) -> int:
-    u = int(binary, 2)
-
-    # use ZigZag to convert unsigned binary to signed int
+def unsigned_to_signed(u: int) -> int:
+    # ZigZag
     if (u % 2) == 0: return u // 2
-    else:            return -((u+1) // 2)
+    else:            return -(u + 1) // 2
+
+def rice_decode(bits: str, p: int) -> tuple[int, int]:
+    i = 0
+    q = 0
+    while bits[i] == "0":
+        q += 1
+        i += 1
+    i += 1  # read the '1'
+
+    r = int(bits[i:i+p], 2) if p > 0 else 0
+    i += p
+
+    u = (q << p) | r
+    return unsigned_to_signed(u), i
 
 
-def decode_block(bits: str, block_len: int = 65536, start: int = 0) -> Tuple[List[Instructions], int]:
+def decode_block(bits: str, start: int = 0) -> tuple[List[Instructions], int]:
     block: List[Instructions] = []
     i = start
-    num_cmds = 0
 
-    while i < len(bits) and num_cmds < block_len:
+    while i < len(bits):
         # read command
         cmd = bits[i:i+4]
         i += 4
-        num_cmds += 1
 
         # read arguments
         if cmd not in {"0010", "0011"}: # exclude IN and OUT
-            if cmd in {"0100", "1100", "1101"}: # loop commands
-                body_len = int(bits[i:i+8], 2)
-                i += 8
-                body, i = decode_block(bits, body_len, i)
+            if cmd in {"0100", "1100"}: # loop commands
+                body, i = decode_block(bits, i)
             else:
-                k = binary_to_int(bits[i:i+8])
-                i += 8
+                k, used = rice_decode(bits[i:], 2) # set p to 2 for now
+                i += used
 
         match cmd:
             case "0000": block.append(MOVE(k))
@@ -50,13 +58,13 @@ def decode_block(bits: str, block_len: int = 65536, start: int = 0) -> Tuple[Lis
             case "1010": block.append(SUB(k))
             case "1011": block.append(SWAP(k))
             case "1100": block.append(IFZ(body))
-            case "1101": block.append(IFNZ(body))
-            case "1110": block.append(CMUL(k))
-            case "1111": block.append(CDIV(k))
+            case "1101": block.append(CMUL(k))
+            case "1110": block.append(CDIV(k))
+            case "1111": return block, i
 
     return block, i
 
-def decode2(n: int) -> List[Instructions]:
+def decode(n: int) -> List[Instructions]:
     binary = bin(n)[3:] # remove "0b" and leading 1
 
     return decode_block(binary)[0]

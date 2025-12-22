@@ -32,9 +32,6 @@ class LOOP:
 class IFZ:
     body: List["Instructions"]
 @dataclass(frozen=True)
-class IFNZ:
-    body: List["Instructions"]
-@dataclass(frozen=True)
 class OUT:
     pass
 @dataclass(frozen=True)
@@ -55,7 +52,7 @@ class CDIV:
 
 Instructions = Union[
     MOVE, CADD, SET, ADD, SUB, COPY, SWAP, LOOP,
-    IFZ, IFNZ, OUT, IN, MUL, CMUL, DIV, CDIV
+    IFZ, OUT, IN, MUL, CMUL, DIV, CDIV
 ]
 
 # ------------------------ Interpret ------------------------
@@ -107,10 +104,6 @@ def interpret(program: List[Instructions], input: bytes = b"") -> bytes:
                 if get_cell(ptr) == 0:
                     exec_block(ins.body)
         
-            elif isinstance(ins, IFNZ):
-                if get_cell(ptr) != 0:
-                    exec_block(ins.body)
-
             elif isinstance(ins, OUT):
                 out.append(get_cell(ptr) & 0xFF)
 

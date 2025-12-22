@@ -1,14 +1,12 @@
 from __future__ import annotations
 from typing import List
 
-from interpreter.base2.encode2 import encode2
-from interpreter.base2.decode2 import decode2
-from interpreter.base3.encode3 import encode3
-from interpreter.base3.decode3 import decode3
-from interpreter.interpreter   import (
+from interpreter.encode      import encode
+from interpreter.decode      import decode
+from interpreter.interpreter import (
     interpret,
     MOVE, CADD, SET, ADD, SUB, COPY, SWAP, LOOP,
-    IFZ, IFNZ, OUT, IN, MUL, CMUL, DIV, CDIV,
+    IFZ, OUT, IN, MUL, CMUL, DIV, CDIV,
     Instructions,
 )
 
@@ -154,7 +152,8 @@ COLLATZ: List[Instructions] = [
         ]),
 
         # if odd (c3 != 0): n = 3n + 1
-        IFNZ([
+        LOOP([
+            SET(0),             # so the loop only runs once
             MOVE(-3),           # -> c0
             CMUL(3), CADD(1),   # n = 3n + 1
             MOVE(3)             # -> c3
@@ -175,19 +174,12 @@ TRUTH_MACHINE: List[Instructions] = [
 ]
 
 
-def optimal_coding(program: List[Instructions]) -> int:
-    TEST_INT_2 = encode2(program)
-    TEST_INT_3 = encode3(program)
-    if TEST_INT_2 < TEST_INT_3:
-        return 2 * TEST_INT_2
-    else:
-        return 2 * TEST_INT_3 + 1
-
 def compute_compactness() -> int:
     total = 0
     programs = [HELLO_WORLD, FACTORIAL, SQRT, FIBONACCI, GCD, POWER, TRIANGULAR, COLLATZ, TRUTH_MACHINE]
     for program in programs:
-        total += optimal_coding(program)
+        total += encode(program)
+        # print(encode(program))
 
     print(str(total // len(programs))) # average
 
@@ -197,26 +189,23 @@ if __name__ == "__main__":
 
     TEST = HELLO_WORLD # change
 
-    # encode - pick optimal encoding
-    TEST_INT = optimal_coding(TEST)
+    # encode
+    TEST_INT = encode(TEST)
     print(TEST_INT)
 
     # read input
     # option 1: read from input.txt
-    input = b""
+    input_bytes = b""
     if IN() in TEST:
         with open("input.txt", "rb") as f:
-            input = f.read()
+            input_bytes = f.read()
 
     # option 2: set directly
-    # input = b"\x05"
+    # input_bytes = b"\x04"
 
-    # decode - infer how it was encoded)
-    if TEST_INT % 2 == 0:
-        program = decode2(TEST_INT // 2)
-    else:
-        program = decode3((TEST_INT - 1) // 2)
+    # decode
+    program = decode(TEST_INT)
 
     # run
-    out = interpret(program, input)
+    out = interpret(program, input_bytes)
     print(out)
