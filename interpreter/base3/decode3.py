@@ -30,8 +30,8 @@ def decode_block(bits: str, start: int = 0) -> Tuple[List[Instructions], int]:
         i += 4
 
         # read argument
-        if cmd not in {"1010", "1011"}: # exclude OUT and IN
-            if cmd in {"0111", "1000", "1001"}: # loop commands
+        if cmd not in {"0010", "0011"}: # exclude IN and OUT
+            if cmd in {"0100", "1100", "1101"}: # loop commands
                 body, i = decode_block(bits, i)
             else:
                 # read until 2
@@ -44,19 +44,19 @@ def decode_block(bits: str, start: int = 0) -> Tuple[List[Instructions], int]:
         match cmd:
             case "0000": block.append(MOVE(k))
             case "0001": block.append(CADD(k))
-            case "0010": block.append(SET(k))
-            case "0011": block.append(ADD(k))
-            case "0100": block.append(SUB(k))
+            case "0010": block.append(IN())
+            case "0011": block.append(OUT())
+            case "0100": block.append(LOOP(body))
             case "0101": block.append(COPY(k))
-            case "0110": block.append(SWAP(k))
-            case "0111": block.append(LOOP(body))
-            case "1000": block.append(IFZ(body))
-            case "1001": block.append(IFNZ(body))
-            case "1010": block.append(OUT())
-            case "1011": block.append(IN())
-            case "1100": block.append(MUL(k))
-            case "1101": block.append(CMUL(k))
-            case "1110": block.append(DIV(k))
+            case "0110": block.append(SET(k))
+            case "0111": block.append(MUL(k))
+            case "1000": block.append(DIV(k))
+            case "1001": block.append(ADD(k))
+            case "1010": block.append(SUB(k))
+            case "1011": block.append(SWAP(k))
+            case "1100": block.append(IFZ(body))
+            case "1101": block.append(IFNZ(body))
+            case "1110": block.append(CMUL(k))
             case "1111": block.append(CDIV(k))
 
     return block, i

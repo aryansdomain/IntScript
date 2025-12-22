@@ -31,21 +31,22 @@ def encode_block(block: List[Instructions]) -> str:
         elif not isinstance(cmd, OUT) and not isinstance(cmd, IN): # has arguments
             k = int_to_binary(cmd.k)
 
+
         if   isinstance(cmd, MOVE): bits += "0000" + k
         elif isinstance(cmd, CADD): bits += "0001" + k
-        elif isinstance(cmd, SET):  bits += "0010" + k
-        elif isinstance(cmd, ADD):  bits += "0011" + k
-        elif isinstance(cmd, SUB):  bits += "0100" + k
+        elif isinstance(cmd, IN):   bits += "0010"
+        elif isinstance(cmd, OUT):  bits += "0011"
+        elif isinstance(cmd, LOOP): bits += "0100" + k
         elif isinstance(cmd, COPY): bits += "0101" + k
-        elif isinstance(cmd, SWAP): bits += "0110" + k
-        elif isinstance(cmd, LOOP): bits += "0111" + k
-        elif isinstance(cmd, IFZ):  bits += "1000" + k
-        elif isinstance(cmd, IFNZ): bits += "1001" + k
-        elif isinstance(cmd, OUT):  bits += "1010"
-        elif isinstance(cmd, IN):   bits += "1011"
-        elif isinstance(cmd, MUL):  bits += "1100" + k
-        elif isinstance(cmd, CMUL): bits += "1101" + k
-        elif isinstance(cmd, DIV):  bits += "1110" + k
+        elif isinstance(cmd, SET):  bits += "0110" + k
+        elif isinstance(cmd, MUL):  bits += "0111" + k
+        elif isinstance(cmd, DIV):  bits += "1000" + k
+        elif isinstance(cmd, ADD):  bits += "1001" + k
+        elif isinstance(cmd, SUB):  bits += "1010" + k
+        elif isinstance(cmd, SWAP): bits += "1011" + k
+        elif isinstance(cmd, IFZ):  bits += "1100" + k
+        elif isinstance(cmd, IFNZ): bits += "1101" + k
+        elif isinstance(cmd, CMUL): bits += "1110" + k
         elif isinstance(cmd, CDIV): bits += "1111" + k
         else:
             raise TypeError(f"Unknown instruction: {cmd}")

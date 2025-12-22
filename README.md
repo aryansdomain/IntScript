@@ -17,19 +17,19 @@ The language has 16 commands that dictate how cells are changed.
 |---:         |---:|---               |---                                   |
 | 0000        | 0  | `MOVE k`         | `ptr += k`                           |
 | 0001        | 1  | `CADD k`         | `array[ptr] += k`                    |
-| 0010        | 2  | `SET k`          | `array[ptr] = k`                     |
-| 0011        | 3  | `ADD k`          | `array[ptr] += array[ptr+k]`         |
-| 0100        | 4  | `SUB k`          | `array[ptr] -= array[ptr+k]`         |
+| 0010        | 2  | `IN`             | input into `array[ptr]`              |
+| 0011        | 3  | `OUT`            | output `array[ptr]`                  |
+| 0100        | 4  | `LOOP { block }` | while `array[ptr] != 0`, run `block` |
 | 0101        | 5  | `COPY k`         | `array[ptr+k] = array[ptr]`          |
-| 0110        | 6  | `SWAP k`         | swap `array[ptr]` and `array[ptr+k]` |
-| 0111        | 7  | `LOOP { block }` | while `array[ptr] != 0`, run `block` |
-| 1000        | 8  | `IFZ { block }`  | if `array[ptr] == 0`, run `block`    |
-| 1001        | 9  | `IFNZ { block }` | if `array[ptr] != 0`, run `block`    |
-| 1010        | 10 | `OUT`            | output `array[ptr]`                  |
-| 1011        | 11 | `IN`             | input into `array[ptr]`              |
-| 1100        | 12 | `MUL k`          | `array[ptr] *= array[ptr+k]`         |
-| 1101        | 13 | `CMUL k`         | `array[ptr] *= k`                    |
-| 1110        | 14 | `DIV k`          | `array[ptr] //= array[ptr+k]`        |
+| 0110        | 6  | `SET k`          | `array[ptr] = k`                     |
+| 0111        | 7  | `MUL k`          | `array[ptr] *= array[ptr+k]`         |
+| 1000        | 8  | `DIV k`          | `array[ptr] //= array[ptr+k]`        |
+| 1001        | 9  | `ADD k`          | `array[ptr] += array[ptr+k]`         |
+| 1010        | 10 | `SUB k`          | `array[ptr] -= array[ptr+k]`         |
+| 1011        | 11 | `SWAP k`         | swap `array[ptr]` and `array[ptr+k]` |
+| 1100        | 12 | `IFZ { block }`  | if `array[ptr] == 0`, run `block`    |
+| 1101        | 13 | `IFNZ { block }` | if `array[ptr] != 0`, run `block`    |
+| 1110        | 14 | `CMUL k`         | `array[ptr] *= k`                    |
 | 1111        | 15 | `CDIV k`         | `array[ptr] //= k`                   |
 
 Notes:

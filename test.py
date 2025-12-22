@@ -5,7 +5,7 @@ from interpreter.base2.encode2 import encode2
 from interpreter.base2.decode2 import decode2
 from interpreter.base3.encode3 import encode3
 from interpreter.base3.decode3 import decode3
-from interpreter.interpreter  import (
+from interpreter.interpreter   import (
     interpret,
     MOVE, CADD, SET, ADD, SUB, COPY, SWAP, LOOP,
     IFZ, IFNZ, OUT, IN, MUL, CMUL, DIV, CDIV,
