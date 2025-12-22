@@ -27,7 +27,7 @@ def rice_decode(bits: str, p: int) -> tuple[int, int]:
     return unsigned_to_signed(u), i
 
 
-def decode_block(bits: str, start: int = 0) -> tuple[List[Instructions], int]:
+def decode_block(bits: str, p: int, start: int = 0) -> tuple[List[Instructions], int]:
     block: List[Instructions] = []
     i = start
 
@@ -39,9 +39,9 @@ def decode_block(bits: str, start: int = 0) -> tuple[List[Instructions], int]:
         # read arguments
         if cmd not in {"0010", "0011"}: # exclude IN and OUT
             if cmd in {"0100", "1100"}: # loop commands
-                body, i = decode_block(bits, i)
+                body, i = decode_block(bits, p, i)
             else:
-                k, used = rice_decode(bits[i:], 2) # set p to 2 for now
+                k, used = rice_decode(bits[i:], p)
                 i += used
 
         match cmd:
@@ -66,5 +66,6 @@ def decode_block(bits: str, start: int = 0) -> tuple[List[Instructions], int]:
 
 def decode(n: int) -> List[Instructions]:
     binary = bin(n)[3:] # remove "0b" and leading 1
+    p = int(binary[0:2], 2) + 2
 
-    return decode_block(binary)[0]
+    return decode_block(binary[2:], p)[0]

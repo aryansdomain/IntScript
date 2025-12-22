@@ -23,14 +23,14 @@ def rice_encode(n: int, p: int) -> str:
     return bits
 
 
-def encode_block(block: List[Instructions]) -> str:
+def encode_block(block: List[Instructions], p: int) -> str:
     bits = ""
     for cmd in block:
 
         if isinstance(cmd, LOOP) or isinstance(cmd, IFZ):
-            k = encode_block(cmd.body) + "1111"
+            k = encode_block(cmd.body, p) + "1111"
         elif not isinstance(cmd, OUT) and not isinstance(cmd, IN): # has arguments
-            k = rice_encode(cmd.k, 2) # set p to 2 for now
+            k = rice_encode(cmd.k, p)
 
 
         if   isinstance(cmd, MOVE): bits += "0000" + k
@@ -54,5 +54,11 @@ def encode_block(block: List[Instructions]) -> str:
     return bits
 
 def encode(program: List[Instructions]) -> int:
-    # leading 1 to ensure all bits get counted
-    return int("1" + encode_block(program), 2)
+
+    # compute optimal p-value
+    p_list = []
+    for p in range(2, 6):
+        header = format(p-2, "02b")
+        p_list.append(int("1" + header + encode_block(program, p), 2))
+
+    return min(p_list)
