@@ -7,13 +7,12 @@ from interpreter.interpreter import (
     interpret,
     MOVE, CADD, SET, ADD, SUB, COPY, SWAP, LOOP,
     IFZ, OUT, IN, MUL, CMUL, DIV, CDIV,
-    Instructions,
 )
 
 # ------------------------ Tests ------------------------
 
 # output "Hello, World!"
-HELLO_WORLD: List[Instructions] = [
+HELLO_WORLD: List = [
     CADD(72),  OUT(),  # H
     CADD(29),  OUT(),  # e
     CADD(7),   OUT(),  # l
@@ -30,7 +29,7 @@ HELLO_WORLD: List[Instructions] = [
 ]
 
 # n!
-FACTORIAL: List[Instructions] = [
+FACTORIAL: List = [
     IN(),                       # cell0 = i = n
     MOVE(1), SET(1),            # cell1 = res = 1
     MOVE(-1),                   # -> c0
@@ -43,7 +42,7 @@ FACTORIAL: List[Instructions] = [
 
 # sqrt(n)
 # 1 + 3 + 5 + ... + (2n-1) = n^2
-SQRT: List[Instructions] = [
+SQRT: List = [
     IN(),                       # c0 = n
     MOVE(1), CADD(1),           # -> c1 = 1
     MOVE(-1),                   # -> c0
@@ -69,7 +68,7 @@ SQRT: List[Instructions] = [
 ]
 
 # find the nth fibonacci number
-FIBONACCI: List[Instructions] = [
+FIBONACCI: List = [
     IN(),                       # c0 = n
     MOVE(1), SET(0),            # c1 = a = 0
     MOVE(1), SET(1),            # c2 = b = 1
@@ -85,7 +84,7 @@ FIBONACCI: List[Instructions] = [
 ]
 
 # gcd of a and b (euclid)
-GCD: List[Instructions] = [
+GCD: List = [
     IN(),                       # c0 = a
     MOVE(1), IN(),              # c1 = b
 
@@ -102,7 +101,7 @@ GCD: List[Instructions] = [
 ]
 
 # a^b
-POWER: List[Instructions] = [
+POWER: List = [
     IN(),                       # c0 = a
     MOVE(1), IN(),              # c1 = b
     MOVE(1), SET(1),            # c2 = 1 (result)
@@ -119,7 +118,7 @@ POWER: List[Instructions] = [
 
 # nth triangular number
 # T(n) = n*(n+1)/2
-TRIANGULAR: List[Instructions] = [
+TRIANGULAR: List = [
     IN(),                       # c0 = n
     COPY(1), MOVE(1), CADD(1),  # c1 = n+1
     MOVE(-1), MUL(1),           # c0 = n*(n+1)
@@ -130,7 +129,7 @@ TRIANGULAR: List[Instructions] = [
 ]
 
 # how many iterations it takes to stabilize to 1
-COLLATZ: List[Instructions] = [
+COLLATZ: List = [
     IN(), CADD(-1),             # c0 = n-1
     MOVE(1), SET(0),            # c1 = steps = 0
 
@@ -167,7 +166,7 @@ COLLATZ: List[Instructions] = [
     MOVE(1), OUT()              # c1 = steps
 ]
 
-TRUTH_MACHINE: List[Instructions] = [
+TRUTH_MACHINE: List = [
     IN(),
     IFZ([ OUT() ]),             # if 0, output 0
     LOOP([ OUT() ])             # if 1, infinitely output 1

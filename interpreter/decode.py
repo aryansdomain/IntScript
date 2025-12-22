@@ -3,8 +3,7 @@ from typing import List
 
 from interpreter.interpreter import (
     MOVE, CADD, SET, ADD, SUB, COPY, SWAP, LOOP,
-    IFZ, OUT, IN, MUL, CMUL, DIV, CDIV,
-    Instructions
+    IFZ, OUT, IN, MUL, CMUL, DIV, CDIV
 )
 
 def unsigned_to_signed(u: int) -> int:
@@ -27,8 +26,8 @@ def rice_decode(bits: str, p: int) -> tuple[int, int]:
     return unsigned_to_signed(u), i
 
 
-def decode_block(bits: str, p: int, start: int = 0) -> tuple[List[Instructions], int]:
-    block: List[Instructions] = []
+def decode_block(bits: str, p: int, start: int = 0) -> tuple[List, int]:
+    block = []
     i = start
 
     while i < len(bits):
@@ -64,7 +63,7 @@ def decode_block(bits: str, p: int, start: int = 0) -> tuple[List[Instructions],
 
     return block, i
 
-def decode(n: int) -> List[Instructions]:
+def decode(n: int) -> List:
     binary = bin(n)[3:] # remove "0b" and leading 1
     p = int(binary[0:2], 2) + 2
 

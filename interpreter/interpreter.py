@@ -1,6 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import List, Union
+from typing import List
 
 # ------------------------ Instructions ------------------------
 
@@ -27,10 +27,10 @@ class SWAP:
     k: int
 @dataclass(frozen=True)
 class LOOP:
-    body: List["Instructions"]
+    body: List
 @dataclass(frozen=True)
 class IFZ:
-    body: List["Instructions"]
+    body: List
 @dataclass(frozen=True)
 class OUT:
     pass
@@ -50,14 +50,9 @@ class DIV:
 class CDIV:
     k: int
 
-Instructions = Union[
-    MOVE, CADD, SET, ADD, SUB, COPY, SWAP, LOOP,
-    IFZ, OUT, IN, MUL, CMUL, DIV, CDIV
-]
-
 # ------------------------ Interpret ------------------------
 
-def interpret(program: List[Instructions], input: bytes = b"") -> bytes:
+def interpret(program: List, input: bytes = b"") -> bytes:
     tape = {}
     ptr = 0
     in_pos = 0
@@ -68,7 +63,7 @@ def interpret(program: List[Instructions], input: bytes = b"") -> bytes:
     def get_cell(i: int) -> int:
         return tape.get(i, 0)
 
-    def exec_block(block: List[Instructions]) -> None:
+    def exec_block(block: List) -> None:
         nonlocal ptr, in_pos
         for ins in block:
 

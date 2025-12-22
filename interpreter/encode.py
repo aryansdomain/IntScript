@@ -3,8 +3,7 @@ from typing import List
 
 from interpreter.interpreter import (
     MOVE, CADD, SET, ADD, SUB, COPY, SWAP, LOOP,
-    IFZ, OUT, IN, MUL, CMUL, DIV, CDIV,
-    Instructions
+    IFZ, OUT, IN, MUL, CMUL, DIV, CDIV
 )
 
 def signed_to_unsigned(s: int) -> int:
@@ -23,7 +22,7 @@ def rice_encode(n: int, p: int) -> str:
     return bits
 
 
-def encode_block(block: List[Instructions], p: int) -> str:
+def encode_block(block: List, p: int) -> str:
     bits = ""
     for cmd in block:
 
@@ -53,7 +52,7 @@ def encode_block(block: List[Instructions], p: int) -> str:
 
     return bits
 
-def encode(program: List[Instructions]) -> int:
+def encode(program: List) -> int:
 
     # compute optimal p-value
     p_list = []
