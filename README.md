@@ -39,28 +39,29 @@ The reader may notice that there is no command whose code is `1111`. This is don
 
 ### Encoding
 
-The program is encoded multiple times, each time with a different Rice parameter (the parameter for the [Rice coding](https://rosettacode.org/wiki/Rice_coding) used). The parameters tested range between 2 and 5.
+The program is encoded multiple times, each time with a different Golomb parameter M (the parameter for the [Golomb coding](https://en.wikipedia.org/wiki/Golomb_coding) used). M ranges from 1 and 16 inclusive.
 
 **For each command:**
 * The corresponding binary code for the command (see the table above) is appended to the string.
 
 * **For a single-number argument *(e.g. `MOVE`, `ADD`)*:**
     * [ZigZag encoding](https://gist.github.com/mfuerstenau/ba870a29e16536fdbaba) is applied to the signed argument to make it unsigned.
-    * The resulting integer is encoded using Rice coding, with the p-value differing for each encoding run, and then added to the string.
+    * The resulting integer is encoded using Golomb coding, with the M-value differing for each encoding run, and then added to the string.
 
 * **For an argument that has a block of code *(e.g. `LOOP`, `IFZ`)*:**
     * The binary encoding of the body of the command (the commands inside the `LOOP` or `IFZ` block) is appended.
     * The code `1111` is appended to show the end of the block. *(This is why there is no command with binary code `1111`, as it is reserved for this.)*
 
-Then, a small header of 3 bits is attached to the front of the block:
+Then, a header of 5 bits is attached to the front of the block:
 * One bit is a leading 1 (to ensure all bits are counted)
-* Two bits convey the Rice parameter, but shifted down by 2.
-    * For example, a parameter of 2 would be encoded as 2 - 2 = `00` and a parameter of 5 becomes 5 - 2 = `11`. This ensures the range fits into two bits.
+* Four bits convey the Golomb parameter, but shifted down by 1.
+    * For example, a parameter of 1 would be encoded as 1 - 1 = `0000` and a parameter of 14 becomes 14 - 1 = `1101`. This ensures the range fits into four bits.
 
 
 #### Example
 
-To show how encoding works, let us take example of a simple program, which computes the factorial of a number. *We will only go through one encoding run, with a Rice parameter of 2 (which turns out to be the most optimal one).*
+To show how encoding works, let us take example of a simple program, which computes the factorial of a number. *We will only go through one encoding run, with a Golomb parameter of 1 (which turns out to be the most optimal one).*
+
 
     # computes n!
     IN(),                    # c0 = n
@@ -75,11 +76,11 @@ To show how encoding works, let us take example of a simple program, which compu
 
 The code for `IN()` is `0010`, so that is the start of our string.  
 Next, the code for `MOVE()`, which is `0000`, is added.  
-Then ZigZag is applied on the argument, `1`, which makes it `2`, which has a binary representation of `10`. The resulting Rice coding for this (with a parameter of 2) is `110`.  
-This results in the string `00100000110`. This continues for `SET(1)` and `MOVE(-1)`, until we reach the `LOOP` command.  
+Then ZigZag is applied on the argument, `1`, which makes it `2`. The resulting Golomb coding for this (with a parameter of 1) is `001`.  
+This results in the string `00100000001`. This continues for `SET(1)` and `MOVE(-1)`, until we reach the `LOOP` command.  
 After the code for `LOOP`, which is `0100`, its commands follow, and finally a `1111` is added to show the end of the block.
 
-Continuing with this, the resulting binary string is `001000001100110110000010101000000110011110100001010001101111100001100011`.  
-Then, the Rice parameter, which is `00` (conveying the number 2), is attached to the front, and so is the leading 1.
+Continuing with this, the resulting binary string is `00100000001011000100000101000000001011101000001000101111100000010011`.  
+Then, the Golomb parameter, which is `0000` (conveying the number 1), is attached to the front, and the leading 1 is prepended before it.
 
-Finally, the binary string is converted to an integer, which in this case is `19494570316728981977187`. This number represents the operation of computing a factorial.
+Finally, the binary string is converted to an integer, which in this case is `4759459277303292557331`. This number represents the operation of computing a factorial.

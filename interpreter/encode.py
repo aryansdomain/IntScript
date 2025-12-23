@@ -11,26 +11,31 @@ def signed_to_unsigned(s: int) -> int:
     if s >= 0: return 2 * s
     else:      return -2 * s - 1
 
-def rice_encode(n: int, p: int) -> str:
+def golomb_encode(n: int, m: int) -> str:
     u = signed_to_unsigned(n)
+    q, r = divmod(u, m)
 
-    q = u >> p
-    r = u & ((1 << p) - 1) # u & (2p-1)
+    # quotient encoded through unary
+    bits = "0" * q + "1"
 
-    bits = ("0" * q) + "1"
-    bits += format(r, f"0{p}b")
+    # remainder encoded through truncated binary
+    k = (m - 1).bit_length()
+    if k == 0: return bits
+    
+    t = (1 << k) - m
+    if r < t: bits += format(r, f"0{k-1}b")
+    else:     bits += format(r + t, f"0{k}b")
     return bits
 
 
-def encode_block(block: List, p: int) -> str:
+def encode_block(block: List, m: int) -> str:
     bits = ""
     for cmd in block:
 
         if isinstance(cmd, LOOP) or isinstance(cmd, IFZ):
-            k = encode_block(cmd.body, p) + "1111"
+            k = encode_block(cmd.body, m) + "1111"
         elif not isinstance(cmd, OUT) and not isinstance(cmd, IN): # has arguments
-            k = rice_encode(cmd.k, p)
-
+            k = golomb_encode(cmd.k, m)
 
         if   isinstance(cmd, MOVE): bits += "0000" + k
         elif isinstance(cmd, CADD): bits += "0001" + k
@@ -54,10 +59,10 @@ def encode_block(block: List, p: int) -> str:
 
 def encode(program: List) -> int:
 
-    # compute optimal p-value
-    p_list = []
-    for p in range(2, 6):
-        header = format(p-2, "02b")
-        p_list.append(int("1" + header + encode_block(program, p), 2))
+    # compute optimal golomb parameter
+    m_list = []
+    for m in range(1, 17):
+        header = format(m - 1, "04b")
+        m_list.append(int("1" + header + encode_block(program, m), 2))
 
-    return min(p_list)
+    return min(m_list) # smallest program

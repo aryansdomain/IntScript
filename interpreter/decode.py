@@ -11,7 +11,7 @@ def unsigned_to_signed(u: int) -> int:
     if (u % 2) == 0: return u // 2
     else:            return -(u + 1) // 2
 
-def rice_decode(bits: str, p: int) -> tuple[int, int]:
+def golomb_decode(bits: str, m: int) -> tuple[int, int]:
     i = 0
     q = 0
     while bits[i] == "0":
@@ -19,14 +19,27 @@ def rice_decode(bits: str, p: int) -> tuple[int, int]:
         i += 1
     i += 1  # read the '1'
 
-    r = int(bits[i:i+p], 2) if p > 0 else 0
-    i += p
+    k = (m - 1).bit_length()
+    t = (1 << k) - m
 
-    u = (q << p) | r
+    if k == 0:
+        r = 0
+    else:
+        x_bits = k - 1
+        x = int(bits[i:i + x_bits], 2) if x_bits > 0 else 0
+        if x < t:
+            r = x
+            i += x_bits
+        else:
+            x = int(bits[i:i + k], 2)
+            r = x - t
+            i += k
+
+    u = q * m + r
     return unsigned_to_signed(u), i
 
 
-def decode_block(bits: str, p: int, start: int = 0) -> tuple[List, int]:
+def decode_block(bits: str, m: int, start: int = 0) -> tuple[List, int]:
     block = []
     i = start
 
@@ -38,9 +51,9 @@ def decode_block(bits: str, p: int, start: int = 0) -> tuple[List, int]:
         # read arguments
         if cmd not in {"0010", "0011"}: # exclude IN and OUT
             if cmd in {"0100", "1100"}: # loop commands
-                body, i = decode_block(bits, p, i)
+                body, i = decode_block(bits, m, i)
             else:
-                k, used = rice_decode(bits[i:], p)
+                k, used = golomb_decode(bits[i:], m)
                 i += used
 
         match cmd:
@@ -65,6 +78,6 @@ def decode_block(bits: str, p: int, start: int = 0) -> tuple[List, int]:
 
 def decode(n: int) -> List:
     binary = bin(n)[3:] # remove "0b" and leading 1
-    p = int(binary[0:2], 2) + 2
+    m = int(binary[0:4], 2) + 1 # get golomb parameter
 
-    return decode_block(binary[2:], p)[0]
+    return decode_block(binary[4:], m)[0]
