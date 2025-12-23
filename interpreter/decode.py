@@ -49,7 +49,7 @@ def decode_block(bits: str, m: int, start: int = 0) -> tuple[List, int]:
         i += 4
 
         # read arguments
-        if cmd not in {"0010", "0011"}: # exclude IN and OUT
+        if cmd not in {"0010", "0011", "1111"}: # exclude IN, OUT, end block
             if cmd in {"0100", "1100"}: # loop commands
                 body, i = decode_block(bits, m, i)
             else:
