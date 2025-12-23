@@ -32,7 +32,6 @@ The language has 15 commands that dictate how cells are changed.
 | 1110        | 14 | `CDIV k`         | `array[ptr] //= k`                       |
 
 Notes:
-* All writes to cells are taken mod 256.
 * Integer division is used for the `DIV` and `CDIV` commands.
 
 The reader may notice that there is no command whose code is `1111`. This is done intentionally, and will be explained later.

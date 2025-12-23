@@ -59,7 +59,7 @@ def interpret(program: List, input: bytes = b"") -> bytes:
     out = bytearray()
 
     def set_cell(i: int, v: int) -> None:
-        tape[i] = v & 0xFF
+        tape[i] = v
     def get_cell(i: int) -> int:
         return tape.get(i, 0)
 
@@ -100,7 +100,7 @@ def interpret(program: List, input: bytes = b"") -> bytes:
                     exec_block(ins.body)
         
             elif isinstance(ins, OUT):
-                out.append(get_cell(ptr) & 0xFF)
+                out.append(get_cell(ptr))
 
             elif isinstance(ins, IN):
                 # read one byte, set current cell
