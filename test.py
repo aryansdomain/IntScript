@@ -76,10 +76,11 @@ FIBONACCI: List = [
 
     LOOP([
         CADD(-1),               # c0--
-        MOVE(1), SWAP(1),       # c1 <-> c2
-        MOVE(1), ADD(-1),       # c2 += c1
-        MOVE(-2),               # -> c0
+        MOVE(1), ADD(1),        # -> c1 += c2
+        SWAP(1),                # c1 <-> c2
+        MOVE(-1),               # -> c0
     ]),
+
     MOVE(1), OUT()              # <- c1
 ]
 
@@ -175,12 +176,23 @@ TRUTH_MACHINE: List = [
 
 def compute_compactness() -> int:
     total = 0
-    programs = [HELLO_WORLD, FACTORIAL, SQRT, FIBONACCI, GCD, POWER, TRIANGULAR, COLLATZ, TRUTH_MACHINE]
-    for program in programs:
-        total += encode(program)
-        # print(encode(program))
+    programs = {
+        "HELLO_WORLD": HELLO_WORLD,
+        "FACTORIAL": FACTORIAL,
+        "SQRT": SQRT,
+        "FIBONACCI": FIBONACCI,
+        "GCD": GCD,
+        "POWER": POWER,
+        "TRIANGULAR": TRIANGULAR,
+        "COLLATZ": COLLATZ,
+        "TRUTH_MACHINE": TRUTH_MACHINE,
+    }
 
-    print(str(total // len(programs))) # average
+    for name, program in programs.items():
+        total += encode(program)
+        print(name + ": " + str(encode(program)))
+
+    print("AVERAGE: " + str(total // len(programs))) # average
 
 
 if __name__ == "__main__":
@@ -195,9 +207,8 @@ if __name__ == "__main__":
     # read input
     # option 1: read from input.txt
     input_bytes = b""
-    if IN() in TEST:
-        with open("input.txt", "rb") as f:
-            input_bytes = f.read()
+    with open("input.txt", "rb") as f:
+        input_bytes = f.read()
 
     # option 2: set directly
     # input_bytes = b"\x04"
