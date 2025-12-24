@@ -100,15 +100,26 @@ def interpret(program: List, input: bytes = b"") -> bytes:
                     exec_block(ins.body)
         
             elif isinstance(ins, OUT):
-                out.append(get_cell(ptr))
+                v = get_cell(ptr)
+                nbytes = max(1, (v.bit_length() + 8) // 8)
+                out.extend(v.to_bytes(nbytes, byteorder="big", signed=True))
 
             elif isinstance(ins, IN):
-                # read one byte, set current cell
-                if in_pos < len(input):
-                    set_cell(ptr, input[in_pos])
-                    in_pos += 1
-                else:
+                # read bytes up to newline (or EOF)
+                if in_pos >= len(input):
                     set_cell(ptr, 0)
+                else:
+                    newline_pos = input.find(b"\n", in_pos)
+                    if newline_pos == -1:
+                        chunk = input[in_pos:]
+                        in_pos = len(input)
+                    else:
+                        chunk = input[in_pos:newline_pos]
+                        in_pos = newline_pos + 1
+                    if len(chunk) == 0:
+                        set_cell(ptr, 0)
+                    else:
+                        set_cell(ptr, int.from_bytes(chunk, byteorder="big", signed=True))
 
             elif isinstance(ins, MUL):
                 set_cell(ptr, get_cell(ptr) * get_cell(ptr + ins.k))

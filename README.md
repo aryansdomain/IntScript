@@ -33,6 +33,8 @@ The language has 15 commands that dictate how cells are changed.
 
 Notes:
 * Integer division is used for the `DIV` and `CDIV` commands.
+* Input reads bytes until a newline.
+* Cells have arbitrarily large memory size, meaning the program may output many bytes in one command
 
 The reader may notice that there is no command whose code is `1111`. This is done intentionally, and will be explained later.
 
