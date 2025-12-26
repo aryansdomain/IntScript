@@ -1,6 +1,5 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import List
 
 # ------------------------ Instructions ------------------------
 
@@ -11,7 +10,25 @@ class MOVE:
 class CADD:
     k: int
 @dataclass(frozen=True)
+class IN:
+    pass
+@dataclass(frozen=True)
+class OUT:
+    pass
+@dataclass(frozen=True)
+class LOOP:
+    body: list
+@dataclass(frozen=True)
+class COPY:
+    k: int
+@dataclass(frozen=True)
 class SET:
+    k: int
+@dataclass(frozen=True)
+class MUL:
+    k: int
+@dataclass(frozen=True)
+class DIV:
     k: int
 @dataclass(frozen=True)
 class ADD:
@@ -20,39 +37,23 @@ class ADD:
 class SUB:
     k: int
 @dataclass(frozen=True)
-class COPY:
-    k: int
-@dataclass(frozen=True)
 class SWAP:
     k: int
 @dataclass(frozen=True)
-class LOOP:
-    body: List
-@dataclass(frozen=True)
 class IFZ:
-    body: List
-@dataclass(frozen=True)
-class OUT:
-    pass
-@dataclass(frozen=True)
-class IN:
-    pass
-@dataclass(frozen=True)
-class MUL:
-    k: int
+    body: list
 @dataclass(frozen=True)
 class CMUL:
-    k: int
-@dataclass(frozen=True)
-class DIV:
     k: int
 @dataclass(frozen=True)
 class CDIV:
     k: int
 
+Commands = [MOVE, CADD, IN, OUT, LOOP, COPY, SET, MUL, DIV, ADD, SUB, SWAP, IFZ, CMUL, CDIV]
+
 # ------------------------ Interpret ------------------------
 
-def interpret(program: List, input: bytes = b"") -> bytes:
+def interpret(program: list, input: bytes = b"") -> bytes:
     tape = {}
     ptr = 0
     in_pos = 0
@@ -63,7 +64,7 @@ def interpret(program: List, input: bytes = b"") -> bytes:
     def get_cell(i: int) -> int:
         return tape.get(i, 0)
 
-    def exec_block(block: List) -> None:
+    def exec_block(block: list) -> None:
         nonlocal ptr, in_pos
         for ins in block:
 
