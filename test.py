@@ -1,5 +1,4 @@
 from __future__ import annotations
-from typing import List
 
 from interpreter.encode      import encode
 from interpreter.decode      import decode
@@ -12,7 +11,7 @@ from interpreter.interpreter import (
 # ------------------------ Tests ------------------------
 
 # output "Hello, World!"
-HELLO_WORLD: List = [
+HELLO_WORLD = [
     CADD(72),  OUT(),  # H
     CADD(29),  OUT(),  # e
     CADD(7),   OUT(),  # l
@@ -29,7 +28,7 @@ HELLO_WORLD: List = [
 ]
 
 # n!
-FACTORIAL: List = [
+FACTORIAL = [
     IN(),                       # cell0 = i = n
     MOVE(1), SET(1),            # cell1 = res = 1
     MOVE(-1),                   # -> c0
@@ -42,7 +41,7 @@ FACTORIAL: List = [
 
 # sqrt(n)
 # 1 + 3 + 5 + ... + (2n-1) = n^2
-SQRT: List = [
+SQRT = [
     IN(),                       # c0 = n
     MOVE(1), CADD(1),           # -> c1 = 1
     MOVE(-1),                   # -> c0
@@ -68,7 +67,7 @@ SQRT: List = [
 ]
 
 # find the nth fibonacci number
-FIBONACCI: List = [
+FIBONACCI = [
     IN(),                       # c0 = n
     MOVE(1), SET(0),            # c1 = a = 0
     MOVE(1), SET(1),            # c2 = b = 1
@@ -85,7 +84,7 @@ FIBONACCI: List = [
 ]
 
 # gcd of a and b (euclid)
-GCD: List = [
+GCD = [
     IN(),                       # c0 = a
     MOVE(1), IN(),              # c1 = b
 
@@ -102,7 +101,7 @@ GCD: List = [
 ]
 
 # a^b
-POWER: List = [
+POWER = [
     IN(),                       # c0 = a
     MOVE(1), IN(),              # c1 = b
     MOVE(1), SET(1),            # c2 = 1 (result)
@@ -119,7 +118,7 @@ POWER: List = [
 
 # nth triangular number
 # T(n) = n*(n+1)/2
-TRIANGULAR: List = [
+TRIANGULAR = [
     IN(),                       # c0 = n
     COPY(1), MOVE(1), CADD(1),  # c1 = n+1
     MOVE(-1), MUL(1),           # c0 = n*(n+1)
@@ -130,7 +129,7 @@ TRIANGULAR: List = [
 ]
 
 # how many iterations it takes to stabilize to 1
-COLLATZ: List = [
+COLLATZ = [
     IN(), CADD(-1),             # c0 = n-1
     MOVE(1), SET(0),            # c1 = steps = 0
 
@@ -167,14 +166,13 @@ COLLATZ: List = [
     MOVE(1), OUT()              # c1 = steps
 ]
 
-TRUTH_MACHINE: List = [
+TRUTH_MACHINE = [
     IN(),
     IFZ([ OUT() ]),             # if 0, output 0
     LOOP([ OUT() ])             # if 1, infinitely output 1
 ]
 
-
-def compute_compactness() -> int:
+def test_and_compute_compactness() -> int:
     total = 0
     programs = {
         "HELLO_WORLD": HELLO_WORLD,
@@ -188,15 +186,22 @@ def compute_compactness() -> int:
         "TRUTH_MACHINE": TRUTH_MACHINE,
     }
 
+    print("-" * 80)
     for name, program in programs.items():
-        total += encode(program)
-        print(name + ": " + str(encode(program)))
+        encoded = encode(program)
+        total += encoded
+        print(name + ": " + " " * (14-len(name)) + str(encoded))
 
-    print("AVERAGE: " + str(total // len(programs))) # average
+        # test if decoding works
+        if program != decode(encoded):
+            print(f"Error: {name} decoded incorrectly")
+
+    print("AVERAGE:        " + str(total // len(programs))) # average
+    print("-" * 80)
 
 
 if __name__ == "__main__":
-    # compute_compactness()
+    # test_and_compute_compactness()
 
     TEST = HELLO_WORLD # change
 
