@@ -1,9 +1,8 @@
 from __future__ import annotations
-from typing import List
-
+import math
 from interpreter.interpreter import (
     MOVE, CADD, SET, ADD, SUB, COPY, SWAP, LOOP,
-    IFZ, OUT, IN, MUL, CMUL, DIV, CDIV
+    IFZ, OUT, IN, MUL, CMUL, DIV, CDIV, Commands
 )
 
 def signed_to_unsigned(s: int) -> int:
@@ -28,13 +27,13 @@ def golomb_encode(n: int, m: int) -> str:
     return bits
 
 
-def encode_block(block: List, m: int, use_normal_alphabet: bool) -> str:
+def encode_block(block: list, m: int, normal_alphabet: bool) -> str:
     bits = ""
 
-    if use_normal_alphabet:
+    if normal_alphabet:
         for cmd in block:
             if isinstance(cmd, LOOP) or isinstance(cmd, IFZ):
-                k = encode_block(cmd.body, m, use_normal_alphabet) + "1111"
+                k = encode_block(cmd.body, m, normal_alphabet) + "1111"
             elif not isinstance(cmd, OUT) and not isinstance(cmd, IN): # has arguments
                 k = golomb_encode(cmd.k, m)
 
@@ -79,7 +78,7 @@ def encode_block(block: List, m: int, use_normal_alphabet: bool) -> str:
                                     bits += "01011"
 
             elif isinstance(cmd, LOOP):
-                                    bits += "01100" + encode_block(cmd.body, m, use_normal_alphabet) + "11111"
+                                    bits += "01100" + encode_block(cmd.body, m, normal_alphabet) + "11111"
 
             elif isinstance(cmd, COPY):
                 if cmd.k == 1:      bits += "01101"
@@ -109,7 +108,7 @@ def encode_block(block: List, m: int, use_normal_alphabet: bool) -> str:
                 else:               bits += "11011" + golomb_encode(cmd.k, m)
 
             elif isinstance(cmd, IFZ):
-                                    bits += "11100" + encode_block(cmd.body, m, use_normal_alphabet) + "11111"
+                                    bits += "11100" + encode_block(cmd.body, m, normal_alphabet) + "11111"
             elif isinstance(cmd, CMUL):
                                     bits += "11101" + golomb_encode(cmd.k, m)
             elif isinstance(cmd, CDIV):
@@ -119,16 +118,63 @@ def encode_block(block: List, m: int, use_normal_alphabet: bool) -> str:
 
     return bits
 
-def encode(program: List) -> int:
+def encode_block_short_alphabet(block: list, m: int) -> str:
+    bits = ""
+
+    # names/types of the commands in block
+    block_types = set()
+    for cmd in block:
+        block_types.add(type(cmd))
+
+    # encode what commands are in block
+    cmds = []
+    for cmd in Commands[::-1]: # less frequent to more frequent
+        if cmd in block_types:
+            bits += "1"
+            cmds.append(cmd)
+        else:
+            bits += "0"
+    cmds.reverse() 
+
+    # number of bits used to represent each command
+    if IFZ in cmds or LOOP in cmds: num_cmds = len(cmds) + 1 # +1 for end block
+    else:                           num_cmds = len(cmds)
+    num_bits = max(1, math.ceil(math.log2(num_cmds)))
+
+    # encode the list of commands
+    for cmd in block:
+        bits += format(cmds.index(type(cmd)), f"0{num_bits}b") # individual code for each command
+
+        # arguments
+        if isinstance(cmd, LOOP) or isinstance(cmd, IFZ):
+            bits += encode_block_short_alphabet(cmd.body, m) + "1" * num_bits
+        elif not isinstance(cmd, OUT) and not isinstance(cmd, IN): # has arguments
+            bits += golomb_encode(cmd.k, m)
+
+    return bits
+
+
+def encode(program: list) -> int:
 
     # compute optimal golomb parameter
-    def optimal_golomb(program: List, use_normal_alphabet: bool) -> int:
+    def optimal_golomb(program: list, normal_alphabet: bool, short_alphabet: bool) -> int:
         m_list = []
         for m in range(1, 17):
-            header = str(int(use_normal_alphabet)) + format(m - 1, "04b")
-            m_list.append(int("1" + header + encode_block(program, m, use_normal_alphabet), 2))
+            if short_alphabet:
+                header = "1" + format(m - 1, "04b")
+                m_list.append(int("1" + header + encode_block_short_alphabet(program, m), 2))
+            else:
+                header = "0" + str(int(normal_alphabet)) + format(m - 1, "04b")
+                m_list.append(int("1" + header + encode_block(program, m, normal_alphabet), 2))
+
         return min(m_list)
 
-    
     # return the smallest program
-    return min(optimal_golomb(program, False), optimal_golomb(program, True))
+    candidates = []
+    pair = [[True, True], [True, False], [False, True], [False, False]]
+    for normal_alphabet, short_alphabet in pair:
+        candidates.append(optimal_golomb(program, normal_alphabet, short_alphabet))
+    return min(candidates)
+
+    # MOST OPTIMAL FOR HELLO WORLD
+    # int("1110000" + encode_block_short_alphabet(program, 17), 2)
