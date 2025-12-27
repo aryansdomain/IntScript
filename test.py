@@ -48,17 +48,8 @@ SQRT = [
 
     # subtract odd numbers from c0 until = 0
     LOOP([
-        MOVE(1),                # -> c1
-        COPY(2), MOVE(2),       # -> c3 = c1
-
-        # c0 -= c3
-        LOOP([
-            CADD(-1),           # c3--
-            MOVE(-3), CADD(-1), # c0--
-            MOVE(3),            # -> c3
-        ]),
-
-        MOVE(-2), CADD(2),      # -> c1 += 2 (next odd number)
+        SUB(1),                 # c0 -= c1
+        MOVE(1), CADD(2),       # -> c1 += 2 (next odd number)
         MOVE(1), CADD(1),       # -> c2++ (count)
         MOVE(-2),               # -> c0
     ]),
@@ -69,8 +60,7 @@ SQRT = [
 # find the nth fibonacci number
 FIBONACCI = [
     IN(),                       # c0 = n
-    MOVE(1), SET(0),            # c1 = a = 0
-    MOVE(1), SET(1),            # c2 = b = 1
+    MOVE(2), SET(1),            # c2 = b = 1
     MOVE(-2),                   # -> c0
 
     LOOP([
@@ -90,9 +80,13 @@ GCD = [
 
     LOOP([
         MOVE(-1),               # -> c0
-        COPY(2), MOVE(2),       # -> c2 = c0
-        DIV(-1), MUL(-1),       # c2 = (a/b)*b = a // b
-        MOVE(-2), SUB(2),       # -> c0 -= c2 (= a mod b)
+
+        # compute a mod b
+        COPY(2),                # c2 = c0
+        DIV(1), MUL(1),         # c0 = (a // b) * b
+        SWAP(2),                # c0 <-> c2
+        SUB(2),                 # c0 -= c2 (c0 = a mod b)
+
         SWAP(1),                # c0 <-> c1 (c0 = b, c1 = a mod b)
         MOVE(1),                # -> c1
     ]),
@@ -122,18 +116,15 @@ TRIANGULAR = [
     IN(),                       # c0 = n
     COPY(1), MOVE(1), CADD(1),  # c1 = n+1
     MOVE(-1), MUL(1),           # c0 = n*(n+1)
-    MOVE(1), SET(2),            # c1 = 2
-    MOVE(-1), DIV(1),           # c0 /= 2
+    CDIV(2),                    # c0 /= 2
 
-    OUT()                       # T(n)
+    OUT()                       # c0 = T(n)
 ]
 
 # how many iterations it takes to stabilize to 1
 COLLATZ = [
     IN(), CADD(-1),             # c0 = n-1
-    MOVE(1), SET(0),            # c1 = steps = 0
 
-    MOVE(-1),                   # -> c0
     # while (n-1) != 0
     LOOP([
         CADD(1),                # c0 = n
