@@ -157,24 +157,21 @@ def encode_block_short_alphabet(block: list, m: int) -> str:
 def encode(program: list) -> int:
 
     # compute optimal golomb parameter
-    def optimal_golomb(program: list, normal_alphabet: bool, short_alphabet: bool) -> int:
+    def optimal_golomb(program: list, method: str, normal_alphabet: bool) -> int:
         m_list = []
         for m in range(1, 17):
-            if short_alphabet:
-                header = "1" + format(m - 1, "04b")
-                m_list.append(int("1" + header + encode_block_short_alphabet(program, m), 2))
-            else:
+            if method == "normal":
                 header = "0" + str(int(normal_alphabet)) + format(m - 1, "04b")
                 m_list.append(int("1" + header + encode_block(program, m, normal_alphabet), 2))
+            elif method == "short_alphabet":
+                header = "1" + format(m - 1, "04b")
+                m_list.append(int("1" + header + encode_block_short_alphabet(program, m), 2))
 
         return min(m_list)
 
     # return the smallest program
     candidates = []
-    pair = [[True, True], [True, False], [False, True], [False, False]]
-    for normal_alphabet, short_alphabet in pair:
-        candidates.append(optimal_golomb(program, normal_alphabet, short_alphabet))
+    pair = [["normal", True], ["normal", False], ["short_alphabet", True]]
+    for method, normal_alphabet in pair:
+        candidates.append(optimal_golomb(program, method, normal_alphabet))
     return min(candidates)
-
-    # MOST OPTIMAL FOR HELLO WORLD
-    # int("1110000" + encode_block_short_alphabet(program, 17), 2)
